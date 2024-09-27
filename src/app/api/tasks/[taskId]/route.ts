@@ -1,37 +1,46 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server'; // Importing NextResponse for responses in Next.js 13+
 import Task from '@/models/taskModel';
 import { connect } from '@/dbConfig/dbConfig';
 
-export default async function helper(req: NextApiRequest, res: NextApiResponse) {
-    const { method } = req;
-    const { taskId } = req.query;
-
+// PUT request handler for updating a task
+export async function PUT(req: Request, { params }: { params: { taskId: string } }) {
     await connect(); // Ensure MongoDB connection
 
-    if (method === 'PUT') {
-        // Update a task's status or other fields
-        try {
-            const { title, description, status } = req.body; // Get fields from the request body
+    try {
+        const { title, description, status } = await req.json(); // Parse the request body
 
-            // Find task by ID and update fields
-            const updatedTask = await Task.findByIdAndUpdate(
-                taskId, 
-                { title, description, status }, // Update title, description, and status
-                { new: true }
-            );
+        // Find task by ID and update fields
+        const updatedTask = await Task.findByIdAndUpdate(
+            params.taskId, 
+            { title, description, status }, // Update title, description, and status
+            { new: true }
+        );
 
-            if (!updatedTask) {
-                return res.status(404).json({ error: 'Task not found' });
-            }
-
-            res.status(200).json(updatedTask); // Return the updated task
-        } catch (error) {
-            console.error('Error updating task:', error); // Log the error for debugging
-            res.status(400).json({ error: 'Error updating task' });
+        if (!updatedTask) {
+            return NextResponse.json({ error: 'Task not found' }, { status: 404 });
         }
-    } else if (method === 'DELETE') {
-        // Handle task deletion if necessary
-    } else {
-        res.status(405).json({ error: 'Method not allowed' });
+
+        return NextResponse.json(updatedTask); // Return the updated task
+    } catch (error) {
+        console.error('Error updating task:', error); // Log the error for debugging
+        return NextResponse.json({ error: 'Error updating task' }, { status: 400 });
+    }
+}
+
+// DELETE request handler for deleting a task
+export async function DELETE(req: Request, { params }: { params: { taskId: string } }) {
+    await connect(); // Ensure MongoDB connection
+
+    try {
+        const deletedTask = await Task.findByIdAndDelete(params.taskId);
+
+        if (!deletedTask) {
+            return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({ message: 'Task deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting task:', error); // Log the error for debugging
+        return NextResponse.json({ error: 'Error deleting task' }, { status: 400 });
     }
 }
