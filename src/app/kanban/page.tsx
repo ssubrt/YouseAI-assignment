@@ -1,6 +1,7 @@
 // src/app/kanban/page.tsx
 'use client';
 import Appbar from '@/components/Appbar';
+import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
