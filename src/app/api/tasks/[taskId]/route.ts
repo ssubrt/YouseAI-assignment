@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import Task from '@/models/taskModel';
 import { connect } from '@/dbConfig/dbConfig';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function helper(req: NextApiRequest, res: NextApiResponse) {
     const { method } = req;
     const { taskId } = req.query;
 
