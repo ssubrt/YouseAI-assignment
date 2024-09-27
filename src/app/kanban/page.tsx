@@ -1,52 +1,57 @@
-// src/app/kanban/page.tsx
 'use client';
 import Appbar from '@/components/Appbar';
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
-
+type Task = {
+  _id: string;
+  title: string;
+  description: string;
+  status: string;
+};
 
 export default function KanbanBoard() {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
     async function fetchTasks() {
       const res = await fetch('/api/tasks');
-      const data = await res.json();
+      const data: Task[] = await res.json();
       setTasks(data);
     }
     fetchTasks();
   }, []);
 
-  // Handle drag end event
   const handleDragEnd = async (result: any) => {
     const { source, destination, draggableId } = result;
 
-    if (!destination) return; // If there's no destination, do nothing
+    if (!destination) return;
 
-    const updatedTasks = [...tasks]; // Create a copy of the tasks
-    const [movedTask] = updatedTasks.splice(source.index, 1); // Remove the task from the original position
-    movedTask.status = destination.droppableId; // Update the task status based on the new column
-    updatedTasks.splice(destination.index, 0, movedTask); // Insert the task into the new position
+    const updatedTasks = [...tasks];
+    const [movedTask] = updatedTasks.splice(source.index, 1);
 
-    setTasks(updatedTasks); // Update the local state
+    if (!movedTask) return;
 
-    // Send the updated task status to the backend
+    movedTask.status = destination.droppableId;
+    updatedTasks.splice(destination.index, 0, movedTask);
+
+    setTasks(updatedTasks);
+
     try {
       await axios.put(`/api/tasks/${draggableId}`, {
-        status: movedTask.status, // Send the new status to the backend
+        status: movedTask.status,
       });
       console.log('Task updated successfully.');
     } catch (error) {
       console.error('Error updating task:', error);
     }
   };
-  
+
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <Appbar name="Tasks" />
-  
+
       <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
         {['To Do', 'In Progress', 'Completed'].map((status, i) => (
           <Droppable key={i} droppableId={status}>
@@ -57,10 +62,10 @@ export default function KanbanBoard() {
                 style={{
                   border: '1px solid gray',
                   padding: '1rem',
-                  width: '100%', // Full width on mobile
-                  maxWidth: '300px', // Maximum width for larger screens
-                  flex: '1 1 auto', // Allow columns to grow and shrink
-                  margin: '0.5rem', // Add some spacing between columns
+                  width: '100%',
+                  maxWidth: '300px',
+                  flex: '1 1 auto',
+                  margin: '0.5rem',
                 }}
               >
                 <h2>{status}</h2>
@@ -94,5 +99,4 @@ export default function KanbanBoard() {
       </div>
     </DragDropContext>
   );
-  
 }
