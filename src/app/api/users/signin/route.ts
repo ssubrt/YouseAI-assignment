@@ -5,13 +5,12 @@ import bcryptjs from "bcryptjs"
 import jwt from "jsonwebtoken";
 
 
-connect();
-
 
 
 
 
 export async function POST(request:NextRequest){
+    await  connect();
     
 
     try {
